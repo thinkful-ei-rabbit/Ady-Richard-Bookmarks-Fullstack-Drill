@@ -56,8 +56,9 @@ bookmarksRouter
         .status(201)
         .location(`http://localhost:8000/bookmarks/${results.id}`)
         .json(results);
-    });
-  });
+    })
+    .catch(next)
+  })
 
 bookmarksRouter
   .route('/bookmarks/:bookmark_id')
