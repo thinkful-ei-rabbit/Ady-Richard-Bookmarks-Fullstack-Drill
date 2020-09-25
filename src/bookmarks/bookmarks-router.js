@@ -81,7 +81,7 @@ bookmarksRouter
   .delete((req, res, next) => {
     const db = req.app.get('db');
     const { bookmark_id } = req.params;
-    console.log('bookmark id:', bookmark_id);
+
     BookmarksService.getById(db, bookmark_id).then((results) => {
       if (!results) {
         logger.error(`Bookmark with id ${bookmark_id} not found.`);

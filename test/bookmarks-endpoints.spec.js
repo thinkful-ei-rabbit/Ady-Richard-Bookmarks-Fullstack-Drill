@@ -2,8 +2,8 @@ const knex = require('knex');
 const fixtures = require('./bookmarks-fixtures');
 const app = require('../src/app');
 const { API_TOKEN } = require('../src/config');
+const { expect } = require('chai');
 
-console.log(process.env.TEST_DB_URL);
 describe('Bookmarks Endpoints', () => {
   let bookmarksCopy, db;
 
@@ -114,10 +114,15 @@ describe('Bookmarks Endpoints', () => {
         );
         return supertest(app)
           .delete(`/bookmarks/${secondBookmark.id}`)
-          .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
+          .set('Authorization', `Bearer ${API_TOKEN}`)
           .expect(204)
           .then(() => {
-            expect(testBookmarks).to.eql(expectedBookmarks);
+            return db
+              .into('bookmarks')
+              .select('*')
+              .then((results) => {
+                expect(results).to.eql(expectedBookmarks);
+              });
           });
       });
 
