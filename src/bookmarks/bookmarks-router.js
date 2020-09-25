@@ -27,7 +27,7 @@ bookmarksRouter
       })
       .catch(next);
   })
-  .post(bodyParser, (req, res) => {
+  .post(bodyParser, (req, res, next) => {
     const db = req.app.get('db');
     for (const field of ['title', 'url', 'rating']) {
       if (!req.body[field]) {
@@ -50,21 +50,23 @@ bookmarksRouter
     let bookmark = { title, url, description, rating };
     bookmark = serializeBookmark(bookmark);
 
-    BookmarksService.insertBookmark(db, bookmark).then((results) => {
-      logger.info(`Bookmark with id ${results.id} created`);
-      res
-        .status(201)
-        .location(`http://localhost:8000/bookmarks/${results.id}`)
-        .json(results);
-    })
-    .catch(next)
-  })
+    BookmarksService.insertBookmark(db, bookmark)
+      .then((results) => {
+        logger.info(`Bookmark with id ${results.id} created`);
+        res
+          .status(201)
+          .location(`http://localhost:8000/bookmarks/${results.id}`)
+          .json(results);
+      })
+      .catch(next);
+  });
 
 bookmarksRouter
   .route('/bookmarks/:bookmark_id')
   .get((req, res, next) => {
+    const db = req.app.get('db');
     const { bookmark_id } = req.params;
-    BookmarksService.getById(req.app.get('db'), bookmark_id)
+    BookmarksService.getById(db, bookmark_id)
       .then((bookmark) => {
         if (!bookmark) {
           logger.error(`Bookmark with id ${bookmark_id} not found.`);
@@ -76,10 +78,10 @@ bookmarksRouter
       })
       .catch(next);
   })
-  .delete((req, res) => {
+  .delete((req, res, next) => {
     const db = req.app.get('db');
     const { bookmark_id } = req.params;
-
+    console.log('bookmark id:', bookmark_id);
     BookmarksService.getById(db, bookmark_id).then((results) => {
       if (!results) {
         logger.error(`Bookmark with id ${bookmark_id} not found.`);
@@ -87,10 +89,12 @@ bookmarksRouter
       }
     });
 
-    BookmarksService.deleteBookmark(db, bookmark_id).then(() => {
-      logger.info(`Bookmark with id ${bookmark_id} deleted.`);
-      res.status(204).end();
-    });
+    BookmarksService.deleteBookmark(db, bookmark_id)
+      .then(() => {
+        logger.info(`Bookmark with id ${bookmark_id} deleted.`);
+        res.status(204).end();
+      })
+      .catch(next);
   });
 
 module.exports = bookmarksRouter;
