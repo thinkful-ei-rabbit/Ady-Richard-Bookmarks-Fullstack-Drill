@@ -6,7 +6,6 @@ function makeBookmarksArray() {
       url: 'https://www.thinkful.com',
       description: 'Think outside the classroom',
       rating: 5,
-      date_inserted: new Date('2020-09-25T21:28:14.225Z'),
     },
     {
       id: 2,
@@ -14,7 +13,6 @@ function makeBookmarksArray() {
       url: 'https://www.google.com',
       description: 'Where we find everything else',
       rating: 4,
-      date_inserted: new Date('2020-09-25T21:28:14.225Z'),
     },
     {
       id: 3,
@@ -22,7 +20,6 @@ function makeBookmarksArray() {
       url: 'https://developer.mozilla.org',
       description: 'The only place to find web documentation',
       rating: 5,
-      date_inserted: new Date('2020-09-25T21:28:14.225Z'),
     },
   ];
 }
@@ -34,7 +31,6 @@ function makeMaliciousBookmark() {
     url: 'https://www.hackers.com',
     description: `Bad image <img src="https://url.to.file.which/does-not.exist" onerror="alert(document.cookie);">. But not <strong>all</strong> bad.`,
     rating: 1,
-    date_inserted: new Date('2020-09-25T21:28:14.225Z'),
   };
   const expectedBookmark = {
     ...maliciousBookmark,

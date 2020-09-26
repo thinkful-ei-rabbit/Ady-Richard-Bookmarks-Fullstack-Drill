@@ -3,6 +3,7 @@ const fixtures = require('./bookmarks-fixtures');
 const app = require('../src/app');
 const { API_TOKEN } = require('../src/config');
 const { expect } = require('chai');
+const supertest = require('supertest');
 
 describe('Bookmarks Endpoints', () => {
   let bookmarksCopy, db;
@@ -109,9 +110,12 @@ describe('Bookmarks Endpoints', () => {
       it('removes the bookmark by ID from the store', () => {
         const secondBookmark = fixtures.makeBookmarksArray()[1];
         const testBookmarks = fixtures.makeBookmarksArray();
-        const expectedBookmarks = testBookmarks.filter(
-          (s) => s.id !== secondBookmark.id
-        );
+        let expectedBookmarksIDs = [];
+        testBookmarks.forEach((s) => {
+          if (s.id !== secondBookmark.id) {
+            expectedBookmarksIDs.push(s.id);
+          }
+        });
         return supertest(app)
           .delete(`/bookmarks/${secondBookmark.id}`)
           .set('Authorization', `Bearer ${API_TOKEN}`)
@@ -121,7 +125,10 @@ describe('Bookmarks Endpoints', () => {
               .into('bookmarks')
               .select('*')
               .then((results) => {
-                expect(results).to.eql(expectedBookmarks);
+                const resultsIDs = results.map((bookmark) => {
+                  return bookmark.id;
+                });
+                expect(resultsIDs).to.eql(expectedBookmarksIDs);
               });
           });
       });
@@ -200,32 +207,35 @@ describe('Bookmarks Endpoints', () => {
           .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
           .expect(400, `'url' must be a valid URL`);
       });
+    });
+  });
+  it('adds a new bookmark to the store', () => {
+    let newBookmark = {
+      title: 'test-title',
+      url: 'https://test.com',
+      description: 'test description',
+      rating: 1,
+    };
+    console.log('Before bkmk:', newBookmark);
+    return supertest(app)
+      .post(`/bookmarks`)
+      .send(newBookmark)
+      .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
 
-      it('adds a new bookmark to the store', () => {
-        const newBookmark = {
-          title: 'test-title',
-          url: 'https://test.com',
-          description: 'test description',
-          rating: 1,
-        };
+      .expect(201)
+      .expect((res) => {
+        expect(res.body.title).to.eql(newBookmark.title);
+        expect(res.body.url).to.eql(newBookmark.url);
+        expect(res.body.description).to.eql(newBookmark.description);
+        expect(res.body.rating).to.eql(newBookmark.rating);
+        expect(res.body.id).to.be.a('number');
+      })
+      .then((result) => {
         return supertest(app)
-          .post(`/bookmarks`)
-          .send(newBookmark)
-          .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
-          .expect(201)
-          .expect((res) => {
-            expect(res.body.title).to.eql(newBookmark.title);
-            expect(res.body.url).to.eql(newBookmark.url);
-            expect(res.body.description).to.eql(newBookmark.description);
-            expect(res.body.rating).to.eql(newBookmark.rating);
-            expect(res.body.id).to.be.a('string');
-          })
-          .then((res) => {
-            expect(store.bookmarks[store.bookmarks.length - 1]).to.eql(
-              res.body
-            );
+          .get(`/bookmarks/${result.id}`)
+          .then((result) => {
+            expect(result.id).to.eql(newBookmark.id);
           });
       });
-    });
   });
 });

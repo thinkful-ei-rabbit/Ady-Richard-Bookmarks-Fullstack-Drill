@@ -15,8 +15,6 @@ const serializeBookmark = (bookmark) => ({
   rating: Number(bookmark.rating),
 });
 
-let store;
-
 bookmarksRouter
   .route('/bookmarks')
   .get((req, res, next) => {
@@ -48,15 +46,13 @@ bookmarksRouter
     }
 
     let bookmark = { title, url, description, rating };
-    bookmark = serializeBookmark(bookmark);
-
     BookmarksService.insertBookmark(db, bookmark)
       .then((results) => {
         logger.info(`Bookmark with id ${results.id} created`);
         res
           .status(201)
           .location(`http://localhost:8000/bookmarks/${results.id}`)
-          .json(results);
+          .json(serializeBookmark(results));
       })
       .catch(next);
   });
@@ -81,6 +77,11 @@ bookmarksRouter
   .delete((req, res, next) => {
     const db = req.app.get('db');
     const { bookmark_id } = req.params;
+
+    if (isNaN(bookmark_id)) {
+      logger.error(`Bookmark with id ${bookmark_id} not found.`);
+      return res.status(404).send('Bookmark Not Found');
+    }
 
     BookmarksService.getById(db, bookmark_id).then((results) => {
       if (!results) {
